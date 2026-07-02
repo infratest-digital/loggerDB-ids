@@ -27,14 +27,12 @@ typedef struct loggerdb_table_iter {
 
 // Iterates node timestamps within one table, ascending, optionally bounded to
 // [start, end). start == 0 means "from the earliest", end == 0 means "through
-// the newest". Fields are private to the implementation.
+// the newest". The matching node times are collected at open() time. Fields
+// are private to the implementation.
 typedef struct loggerdb_node_iter {
-    loggerdb_table* table;
-    time_t  start;
-    time_t  end;
-    void*   _level[5];   // YYYY / MM / DD / HH / MM walk handles
-    int16_t _idx[5];     // current sorted position at each level
-    time_t  _cur;
+    time_t* _times;   // ascending, malloc'd at open
+    int     _count;
+    int     _idx;
     uint8_t init;
 } loggerdb_node_iter;
 

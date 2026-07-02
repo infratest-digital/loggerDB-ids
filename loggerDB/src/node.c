@@ -105,6 +105,29 @@ static void strtime(struct dt* newtime, char* buff)
     buff[16] = '\0';
 }
 
+// Format a node's on-disk sub-path "YYYY/MM/DD/HH/MM" for a timestamp, using
+// the same calendar math as ldb_node_open so paths match exactly. buff must be
+// at least 18 bytes.
+void ldb_time_to_path(time_t time, char* buff)
+{
+    struct dt newtime;
+    datetime(&time, &newtime);
+    strtime(&newtime, buff);
+}
+
+// Inverse of the above at minute resolution: civil fields -> Unix time_t
+// (days_from_civil, proleptic Gregorian). Consistent with datetime().
+time_t ldb_time_from_civil(int year, int mon, int day, int hour, int min, int sec)
+{
+    int y = year - (mon <= 2);
+    int era = (y >= 0 ? y : y - 399) / 400;
+    unsigned yoe = (unsigned)(y - era * 400);
+    unsigned doy = (unsigned)((153 * (mon > 2 ? mon - 3 : mon + 9) + 2) / 5 + day - 1);
+    unsigned doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    long days = (long)era * 146097 + (long)doe - 719468;
+    return (time_t)days * 86400 + (time_t)hour * 3600 + (time_t)min * 60 + sec;
+}
+
 int ldb_node_check(loggerdb_table* table, time_t time)
 {
     if (!table)
