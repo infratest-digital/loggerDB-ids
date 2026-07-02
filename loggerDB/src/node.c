@@ -48,6 +48,10 @@ const char* dd_lut[61] = {"00", "01", "02", "03", "04", "05", "06", "07", "08", 
 
 static struct dt* datetime(const time_t* timep, struct dt* result)
 {
+    // Neri C, Schneider L. "*Euclidean affine functions and their application to
+    // calendar algorithms*". Softw Pract Exper. 2022;1-34. doi:
+    // [10.1002/spe.3172](https://onlinelibrary.wiley.com/doi/full/10.1002/spe.3172).
+
     assert(timep);
     assert(result);
 
