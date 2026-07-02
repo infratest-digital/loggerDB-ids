@@ -134,6 +134,19 @@ time_t ldb_time_from_civil(int year, int mon, int day, int hour, int min, int se
     return (time_t)days * 86400 + (time_t)hour * 3600 + (time_t)min * 60 + sec;
 }
 
+void ldb_time_to_civil(time_t time, int* year, int* mon, int* day,
+                       int* hour, int* min, int* sec)
+{
+    struct dt t;
+    datetime(&time, &t);
+    if (year) *year = t.year;
+    if (mon)  *mon  = t.mon;
+    if (day)  *day  = t.day;
+    if (hour) *hour = t.hour;
+    if (min)  *min  = t.min;
+    if (sec)  *sec  = t.sec;
+}
+
 int ldb_node_check(loggerdb_table* table, time_t time)
 {
     if (!table)
