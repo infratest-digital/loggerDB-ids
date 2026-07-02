@@ -8,6 +8,7 @@ target_sources(loggerDB INTERFACE
     src/stream.c
     src/path.c
     src/util.c
+    src/enum.c
 )
 target_include_directories(loggerDB INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
 target_link_libraries(loggerDB INTERFACE ldb_mutex)

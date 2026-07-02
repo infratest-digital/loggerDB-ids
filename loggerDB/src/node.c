@@ -19,6 +19,12 @@
 
 #define METADATA_SIZE_LIMIT 255
 
+// Field data is binary; keep Windows/mingw from doing CRLF translation on it.
+// O_BINARY is absent (and unneeded) on POSIX and the device.
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 #define ERA_OFFSET ((int32_t)3670)
 /// Every era has 146097 days
 #define DAYS_IN_ERA ((int32_t)146097)
@@ -107,6 +113,42 @@ static void strtime(struct dt* newtime, char* buff)
     buff[13] = '/';
     memcpy(buff+14, dd_lut[newtime->min], 2);
     buff[16] = '\0';
+}
+
+// Format a node's on-disk sub-path "YYYY/MM/DD/HH/MM" for a timestamp, using
+// the same calendar math as ldb_node_open so paths match exactly. buff must be
+// at least 18 bytes.
+void ldb_time_to_path(time_t time, char* buff)
+{
+    struct dt newtime;
+    datetime(&time, &newtime);
+    strtime(&newtime, buff);
+}
+
+// Inverse of the above at minute resolution: civil fields -> Unix time_t
+// (days_from_civil, proleptic Gregorian). Consistent with datetime().
+time_t ldb_time_from_civil(int year, int mon, int day, int hour, int min, int sec)
+{
+    int y = year - (mon <= 2);
+    int era = (y >= 0 ? y : y - 399) / 400;
+    unsigned yoe = (unsigned)(y - era * 400);
+    unsigned doy = (unsigned)((153 * (mon > 2 ? mon - 3 : mon + 9) + 2) / 5 + day - 1);
+    unsigned doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    long days = (long)era * 146097 + (long)doe - 719468;
+    return (time_t)days * 86400 + (time_t)hour * 3600 + (time_t)min * 60 + sec;
+}
+
+void ldb_time_to_civil(time_t time, int* year, int* mon, int* day,
+                       int* hour, int* min, int* sec)
+{
+    struct dt t;
+    datetime(&time, &t);
+    if (year) *year = t.year;
+    if (mon)  *mon  = t.mon;
+    if (day)  *day  = t.day;
+    if (hour) *hour = t.hour;
+    if (min)  *min  = t.min;
+    if (sec)  *sec  = t.sec;
 }
 
 int ldb_node_check(loggerdb_table* table, time_t time)
@@ -260,7 +302,7 @@ ssize_t ldb_node_size(loggerdb_node* node, const char* field)
 
     // Use append to get the size to prevent double seeking on filesystems
     // where files are stored as backwards linked-lists
-    int fd = open(field_path, O_RDONLY | O_APPEND);
+    int fd = open(field_path, O_RDONLY | O_APPEND | O_BINARY);
     free(field_path);
 
     if (fd < 0)
@@ -289,7 +331,7 @@ static inline ssize_t _ldb_node_read_file(loggerdb_node* node, const char* path,
 
     mutex->enter(node->mutex);
 
-    int fd = open(path, O_RDONLY);
+    int fd = open(path, O_RDONLY | O_BINARY);
     if (fd < 0)
     {
         ret = -LOGGERDB_ERROR;
@@ -358,7 +400,7 @@ ssize_t ldb_node_write(loggerdb_node* node, const char* field, void* ptr, size_t
         goto cleanup;
     }
 
-    int fd = open(field_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    int fd = open(field_path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0644);
     free(field_path);
 
     if (fd < 0)
@@ -395,7 +437,7 @@ ssize_t ldb_node_append(loggerdb_node* node, const char* field, void* ptr, size_
         goto cleanup;
     }
 
-    int fd = open(field_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+    int fd = open(field_path, O_WRONLY | O_CREAT | O_APPEND | O_BINARY, 0644);
     free(field_path);
 
     if (fd < 0)
