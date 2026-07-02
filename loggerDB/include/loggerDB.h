@@ -5,5 +5,6 @@
 #include "loggerDB/table.h"
 #include "loggerDB/node.h"
 #include "loggerDB/status.h"
+#include "loggerDB/enum.h"
 
 #endif
