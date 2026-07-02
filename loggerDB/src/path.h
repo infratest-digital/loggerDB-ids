@@ -20,9 +20,8 @@ int ldb_path_rmtree(const char* path);
 // directory is treated as empty (LOGGERDB_OK, count 0).
 int ldb_path_list_dirs(const char* path, char (*names)[LDB_DIR_NAME_MAX], int max, int* count_out);
 
-// Node <-> time helpers (defined in node.c, sharing its calendar math).
-// ldb_time_to_path formats "YYYY/MM/DD/HH/MM" (18-byte buffer incl. NUL).
-void   ldb_time_to_path(time_t time, char* buff);
-time_t ldb_time_from_civil(int year, int mon, int day, int hour, int min, int sec);
+// Format a node's sub-path "YYYY/MM/DD/HH/MM" (18-byte buffer incl. NUL).
+// Defined in node.c; ldb_time_from_civil is the public inverse (node.h).
+void ldb_time_to_path(time_t time, char* buff);
 
 #endif

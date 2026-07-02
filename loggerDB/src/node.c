@@ -19,6 +19,12 @@
 
 #define METADATA_SIZE_LIMIT 255
 
+// Field data is binary; keep Windows/mingw from doing CRLF translation on it.
+// O_BINARY is absent (and unneeded) on POSIX and the device.
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 #define ERA_OFFSET ((int32_t)3670)
 /// Every era has 146097 days
 #define DAYS_IN_ERA ((int32_t)146097)
@@ -279,7 +285,7 @@ ssize_t ldb_node_size(loggerdb_node* node, const char* field)
 
     // Use append to get the size to prevent double seeking on filesystems
     // where files are stored as backwards linked-lists
-    int fd = open(field_path, O_RDONLY | O_APPEND);
+    int fd = open(field_path, O_RDONLY | O_APPEND | O_BINARY);
     free(field_path);
 
     if (fd < 0)
@@ -308,7 +314,7 @@ static inline ssize_t _ldb_node_read_file(loggerdb_node* node, const char* path,
 
     mutex->enter(node->mutex);
 
-    int fd = open(path, O_RDONLY);
+    int fd = open(path, O_RDONLY | O_BINARY);
     if (fd < 0)
     {
         ret = -LOGGERDB_ERROR;
@@ -377,7 +383,7 @@ ssize_t ldb_node_write(loggerdb_node* node, const char* field, void* ptr, size_t
         goto cleanup;
     }
 
-    int fd = open(field_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    int fd = open(field_path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0644);
     free(field_path);
 
     if (fd < 0)
@@ -414,7 +420,7 @@ ssize_t ldb_node_append(loggerdb_node* node, const char* field, void* ptr, size_
         goto cleanup;
     }
 
-    int fd = open(field_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+    int fd = open(field_path, O_WRONLY | O_CREAT | O_APPEND | O_BINARY, 0644);
     free(field_path);
 
     if (fd < 0)
