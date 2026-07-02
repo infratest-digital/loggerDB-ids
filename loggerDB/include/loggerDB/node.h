@@ -17,6 +17,10 @@ typedef struct loggerdb_node {
     uint8_t init;
 } loggerdb_node;
 
+// Civil fields -> Unix time_t (proleptic Gregorian). Use to address the node
+// for a known calendar time; the inverse of what the node iterator returns.
+time_t ldb_time_from_civil(int year, int mon, int day, int hour, int min, int sec);
+
 int ldb_node_check(loggerdb_table* table, time_t time);
 int ldb_node_open(loggerdb_table* table, time_t time, loggerdb_node* node);
 int ldb_node_close(loggerdb_node* node);
