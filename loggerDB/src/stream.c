@@ -21,10 +21,7 @@ int ldb_stream_open(loggerdb_node* node, const char* field, size_t membs, int fl
     int fd = open(field_path, O_RDWR | O_CREAT, 0644);
     free(field_path);
     if (fd < 0)
-    {
-        printf("\n%s %i\n", field_path, fd);
         return LOGGERDB_FDERR;
-    }
 
     stream->fd = fd;
     stream->membs = membs;
