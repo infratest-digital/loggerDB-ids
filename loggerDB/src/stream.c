@@ -56,7 +56,7 @@ ssize_t ldb_stream_read(loggerdb_stream* stream, void* ptr)
     ssize_t s = read(stream->fd, ptr, stream->membs);
     if (s < 0)
         return -LOGGERDB_FDBAD;
-    if (s != stream->membs)
+    if ((size_t)s != stream->membs)
         return -LOGGERDB_INVALID;
 
     return s;
@@ -72,7 +72,7 @@ ssize_t ldb_stream_write(loggerdb_stream* stream, void* ptr)
     ssize_t s = write(stream->fd, ptr, stream->membs);
     if (s < 0)
         return -LOGGERDB_FDBAD;
-    if (s != stream->membs)
+    if ((size_t)s != stream->membs)
         return -LOGGERDB_INVALID;
 
     return s;
